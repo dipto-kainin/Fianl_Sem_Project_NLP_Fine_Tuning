@@ -1,0 +1,60 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# Python Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.py[cod]
+
+# Node / Frontend Build & Deps
+node_modules/
+.next/
+out/
+.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Process / Log Files
+*.log
+backend/uvicorn.log
+backend/celery.log
+frontend/next.log
+.services.pid
+
+# Large Local Storage, Models & Datasets
+backend/storage/
+*.gguf
+*.bin
+*.safetensors
+*.onnx
+
+# IDE & Editor Configs
+.idea/
+.vscode/
+*.swp
+*.swo
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+.agents/
+.codex/
+.impeccable/
