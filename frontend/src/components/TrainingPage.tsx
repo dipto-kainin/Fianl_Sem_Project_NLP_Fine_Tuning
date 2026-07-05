@@ -31,9 +31,10 @@ interface RunCardProps {
   onRetry: (id: string) => void
   onDelete: (id: string) => void
   animRef: (el: HTMLDivElement | null) => void
+  isLast?: boolean
 }
 
-function RunCard({ run, onCancel, onRetry, onDelete, animRef }: RunCardProps) {
+function RunCard({ run, onCancel, onRetry, onDelete, animRef, isLast }: RunCardProps) {
   const [expanded, setExpanded] = useState(false)
   const metrics = run.metrics || {}
 
@@ -41,7 +42,7 @@ function RunCard({ run, onCancel, onRetry, onDelete, animRef }: RunCardProps) {
     <div
       ref={animRef}
       style={{
-        borderBottom: '1px solid var(--border)',
+        borderBottom: isLast ? 'none' : '1px solid var(--border)',
         transition: 'background 150ms',
       }}
     >
@@ -375,7 +376,7 @@ export function TrainingPage() {
       </div>
 
       {/* Start training form */}
-      <Card style={{ marginBottom: 24 }} className="animate-fade-up">
+      <Card style={{ marginBottom: 24 }} className="animate-fade-up p-0 gap-0">
         <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border)' }}>
           <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>New training run</h2>
         </div>
@@ -383,7 +384,7 @@ export function TrainingPage() {
       </Card>
 
       {/* Runs list */}
-      <Card className="animate-fade-up" style={{ animationDelay: '60ms' }}>
+      <Card className="animate-fade-up p-0 gap-0" style={{ animationDelay: '60ms' }}>
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <ChartLine size={15} style={{ color: 'var(--ink-muted)' }} />
           <h2 style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Runs</h2>
@@ -403,6 +404,7 @@ export function TrainingPage() {
               onCancel={(id) => cancelMut.mutate(id)}
               onRetry={(id) => retryMut.mutate(id)}
               onDelete={(id) => deleteMut.mutate(id)}
+              isLast={i === runs.length - 1}
             />
           ))
         )}

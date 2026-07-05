@@ -27,9 +27,9 @@ function formatDate(s?: string) {
 
 /* ─── Priority Badge ─────────────────────────────────────────────── */
 const PRIORITY_COLORS: Record<number, { bg: string; text: string; label: string }> = {
-  3: { bg: 'rgba(239,68,68,0.15)', text: '#f87171', label: 'High' },
-  2: { bg: 'rgba(234,179,8,0.15)',  text: '#facc15', label: 'Med'  },
-  1: { bg: 'rgba(148,163,184,0.12)', text: '#94a3b8', label: 'Low' },
+  3: { bg: 'rgba(239,68,68,0.08)', text: '#dc2626', label: 'High' },
+  2: { bg: 'rgba(217,119,6,0.08)',  text: '#d97706', label: 'Med'  },
+  1: { bg: 'rgba(100,116,139,0.08)', text: '#475569', label: 'Low' },
 }
 
 function PriorityBadge({ priority }: { priority: number }) {
@@ -52,10 +52,11 @@ function PriorityBadge({ priority }: { priority: number }) {
 }
 
 /* ─── Sample Editor Row ──────────────────────────────────────────── */
-function SampleRow({ sample, datasetId, onDeleted }: {
+function SampleRow({ sample, datasetId, onDeleted, isLast }: {
   sample: any
   datasetId: string
   onDeleted: (id: string) => void
+  isLast?: boolean
 }) {
   const qc = useQueryClient()
   const [editing, setEditing] = useState(false)
@@ -93,10 +94,10 @@ function SampleRow({ sample, datasetId, onDeleted }: {
   }
 
   const inputBase: React.CSSProperties = {
-    background: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.12)',
+    background: 'var(--surface)',
+    border: '1px solid var(--border)',
     borderRadius: 6,
-    color: '#e2e8f0',
+    color: 'var(--ink)',
     fontSize: 12,
     lineHeight: 1.55,
     padding: '7px 10px',
@@ -105,14 +106,15 @@ function SampleRow({ sample, datasetId, onDeleted }: {
     fontFamily: 'inherit',
     width: '100%',
     boxSizing: 'border-box' as const,
+    transition: 'border-color 150ms, box-shadow 150ms',
   }
 
   return (
     <div style={{
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
+      borderBottom: isLast ? 'none' : '1px solid var(--border)',
       padding: editing ? '12px 16px' : '10px 16px',
       transition: 'background 120ms',
-      background: editing ? 'rgba(99,102,241,0.04)' : 'transparent',
+      background: editing ? 'var(--primary-glow)' : 'transparent',
     }}>
       {editing ? (
         /* ── Edit mode ── */
@@ -130,7 +132,7 @@ function SampleRow({ sample, datasetId, onDeleted }: {
                   onClick={() => setPriority(p)}
                   style={{
                     background: selected ? c.bg : 'transparent',
-                    border: `1px solid ${selected ? c.text : 'rgba(255,255,255,0.12)'}`,
+                    border: `1px solid ${selected ? c.text : 'var(--border)'}`,
                     color: selected ? c.text : 'var(--ink-muted)',
                     borderRadius: 99,
                     fontSize: 11,
@@ -154,6 +156,7 @@ function SampleRow({ sample, datasetId, onDeleted }: {
               rows={2}
               spellCheck={false}
               style={inputBase}
+              className="focus:border-primary focus:ring-2 focus:ring-primary-glow"
             />
           </div>
 
@@ -165,6 +168,7 @@ function SampleRow({ sample, datasetId, onDeleted }: {
               rows={3}
               spellCheck={false}
               style={inputBase}
+              className="focus:border-primary focus:ring-2 focus:ring-primary-glow"
             />
           </div>
 
@@ -259,7 +263,7 @@ function SampleRow({ sample, datasetId, onDeleted }: {
 }
 
 /* ─── Dataset Row ────────────────────────────────────────────────── */
-function DatasetRow({ dataset, rowRef }: { dataset: any; rowRef: (el: HTMLDivElement | null) => void }) {
+function DatasetRow({ dataset, rowRef, isLast }: { dataset: any; rowRef: (el: HTMLDivElement | null) => void; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false)
   const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
 
@@ -287,7 +291,7 @@ function DatasetRow({ dataset, rowRef }: { dataset: any; rowRef: (el: HTMLDivEle
           alignItems: 'center',
           gap: 12,
           padding: '12px 16px',
-          borderBottom: '1px solid var(--border)',
+          borderBottom: (expanded || !isLast) ? '1px solid var(--border)' : 'none',
           cursor: 'pointer',
           transition: 'background 150ms',
           userSelect: 'none',
@@ -335,7 +339,7 @@ function DatasetRow({ dataset, rowRef }: { dataset: any; rowRef: (el: HTMLDivEle
 
       {/* Samples panel */}
       {expanded && (
-        <div style={{ borderBottom: '1px solid var(--border)', background: 'rgba(0,0,0,0.18)' }}>
+        <div style={{ borderBottom: isLast ? 'none' : '1px solid var(--border)', background: 'var(--surface-2)' }}>
           {samplesLoading ? (
             <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {[...Array(4)].map((_, i) => <Skeleton key={i} style={{ height: 44 }} />)}
@@ -346,18 +350,19 @@ function DatasetRow({ dataset, rowRef }: { dataset: any; rowRef: (el: HTMLDivEle
             </div>
           ) : (
             <>
-              <div style={{ padding: '8px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Warning size={13} style={{ color: 'var(--ink-muted)' }} />
                 <span style={{ fontSize: 11, color: 'var(--ink-muted)' }}>
                   Click the pencil icon on any sample to edit it. Changes are saved to the JSONL immediately.
                 </span>
               </div>
-              {samples.map((s: any) => (
+              {samples.map((s: any, idx: number) => (
                 <SampleRow
                   key={s.id}
                   sample={s}
                   datasetId={dataset.id}
                   onDeleted={(id) => setDeletedIds(prev => new Set([...prev, id]))}
+                  isLast={idx === samples.length - 1}
                 />
               ))}
             </>
@@ -458,7 +463,7 @@ export function DatasetsPage() {
         </Button>
       </div>
 
-      <Card className="animate-fade-up">
+      <Card className="animate-fade-up p-0 gap-0">
         {isLoading ? (
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...Array(4)].map((_, i) => <Skeleton key={i} style={{ height: 60 }} />)}
@@ -467,7 +472,7 @@ export function DatasetsPage() {
           <EmptyState icon={HardDrives} title="No datasets yet" description="Process documents with the Teacher LLM to generate training datasets." />
         ) : (
           datasets.map((d: any, i: number) => (
-            <DatasetRow key={d.id} dataset={d} rowRef={(el) => { rowRefs.current[i] = el }} />
+            <DatasetRow key={d.id} dataset={d} rowRef={(el) => { rowRefs.current[i] = el }} isLast={i === datasets.length - 1} />
           ))
         )}
       </Card>

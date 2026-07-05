@@ -48,18 +48,24 @@ function DropZone({ onFile }: DropZoneProps) {
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDrag(false)
+    if (zoneRef.current) {
+      gsap.to(zoneRef.current, { scale: 1, duration: 0.2, ease: 'power2.out' })
+    }
     const file = e.dataTransfer.files[0]
     if (file) onFile(file)
   }, [onFile])
 
-  const handleEnter = (e: React.DragEvent) => {
+  const handleDragEnter = (e: React.DragEvent) => {
     e.preventDefault()
-    setDrag(true)
-    if (zoneRef.current) {
-      gsap.to(zoneRef.current, { scale: 1.01, duration: 0.2, ease: 'power2.out' })
+    if (!drag) {
+      setDrag(true)
+      if (zoneRef.current) {
+        gsap.to(zoneRef.current, { scale: 1.01, duration: 0.2, ease: 'power2.out' })
+      }
     }
   }
-  const handleLeave = (e: React.DragEvent) => {
+
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
     setDrag(false)
     if (zoneRef.current) {
@@ -67,11 +73,16 @@ function DropZone({ onFile }: DropZoneProps) {
     }
   }
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+  }
+
   return (
     <div
       ref={zoneRef}
-      onDragOver={handleEnter}
-      onDragLeave={handleLeave}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
       onDrop={handleDrop}
       onClick={() => inputRef.current?.click()}
       style={{
@@ -117,7 +128,13 @@ function DropZone({ onFile }: DropZoneProps) {
         type="file"
         accept=".pdf,.docx,.txt,.md,.html,.epub"
         style={{ display: 'none' }}
-        onChange={(e) => { if (e.target.files?.[0]) onFile(e.target.files[0]) }}
+        onClick={(e) => e.stopPropagation()}
+        onChange={(e) => {
+          if (e.target.files?.[0]) {
+            onFile(e.target.files[0])
+          }
+          e.target.value = ''
+        }}
       />
     </div>
   )
@@ -129,9 +146,10 @@ interface DocRowProps {
   onProcess: (id: string) => void
   onDelete: (id: string) => void
   animRef: (el: HTMLDivElement | null) => void
+  isLast?: boolean
 }
 
-function DocRow({ doc, onProcess, onDelete, animRef }: DocRowProps) {
+function DocRow({ doc, onProcess, onDelete, animRef, isLast }: DocRowProps) {
   return (
     <div
       ref={animRef}
@@ -140,7 +158,7 @@ function DocRow({ doc, onProcess, onDelete, animRef }: DocRowProps) {
         alignItems: 'center',
         gap: 14,
         padding: '13px 18px',
-        borderBottom: '1px solid var(--border)',
+        borderBottom: isLast ? 'none' : '1px solid var(--border)',
         transition: 'background 150ms',
       }}
       onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--surface-2)')}
@@ -252,7 +270,7 @@ export function DocumentsPage() {
 
   // Animate rows in when data loads
   const prevCount = useRef(0)
-  
+
   useEffect(() => {
     if (data?.documents) {
       const docs = data.documents
@@ -302,7 +320,7 @@ export function DocumentsPage() {
       </div>
 
       {/* Documents list */}
-      <Card style={{ animationDelay: '100ms' }} className="animate-fade-up">
+      <Card style={{ animationDelay: '100ms' }} className="animate-fade-up p-0 gap-0">
         {isLoading ? (
           <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {[...Array(4)].map((_, i) => (
@@ -324,6 +342,7 @@ export function DocumentsPage() {
                 animRef={(el) => { rowRefs.current[i] = el }}
                 onProcess={(id) => processMut.mutate(id)}
                 onDelete={(id) => deleteMut.mutate(id)}
+                isLast={i === docs.length - 1}
               />
             ))}
           </div>
