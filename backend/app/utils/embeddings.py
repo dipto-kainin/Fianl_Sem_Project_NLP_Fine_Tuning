@@ -24,7 +24,13 @@ def get_embedding_model() -> SentenceTransformer:
         Loaded SentenceTransformer model.
     """
     logger.info(f"Loading embedding model: {settings.EMBEDDING_MODEL}")
-    model = SentenceTransformer(settings.EMBEDDING_MODEL)
+    try:
+        # Try loading from local cache first to avoid slow network checks/failures when offline
+        model = SentenceTransformer(settings.EMBEDDING_MODEL, local_files_only=True)
+        logger.info("Loaded embedding model from local cache.")
+    except Exception as e:
+        logger.info(f"Local embedding model load failed or not cached ({e}). Attempting online download/load...")
+        model = SentenceTransformer(settings.EMBEDDING_MODEL)
     logger.info(f"Embedding model loaded. Dimension: {model.get_sentence_embedding_dimension()}")
     return model
 

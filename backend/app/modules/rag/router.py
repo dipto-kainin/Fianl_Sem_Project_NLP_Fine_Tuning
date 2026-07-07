@@ -52,6 +52,7 @@ async def rag_query(
         tokens_used=result["tokens_used"],
         query=result["query"],
         use_rag=result["use_rag"],
+        used_rag=result["use_rag"],
     )
 
 

@@ -90,11 +90,16 @@ async def rag_query(
 
     # A. Gemini (Teacher)
     if model in ("teacher", "compare"):
-        answer, tokens_used = generate_rag_answer(
-            query=query,
-            context_chunks=context_chunks,
-            chunk_summaries=chunk_summaries,
-        )
+        try:
+            answer, tokens_used = generate_rag_answer(
+                query=query,
+                context_chunks=context_chunks,
+                chunk_summaries=chunk_summaries,
+            )
+        except Exception as e:
+            logger.error(f"Teacher (Gemini) model generation failed: {e}")
+            answer = f"Teacher (Gemini) generation failed (offline or network error): {str(e)}"
+            tokens_used = 0
 
     # B. Default Student Model (TinyLlama Base)
     if model in ("default", "compare"):

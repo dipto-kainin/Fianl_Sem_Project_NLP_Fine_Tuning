@@ -122,7 +122,11 @@ async def get_student_model_and_tokenizer(db: AsyncSession, force_base: bool = F
 
     try:
         # Load tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(path_to_load, trust_remote_code=True)
+        try:
+            tokenizer = AutoTokenizer.from_pretrained(path_to_load, trust_remote_code=True, local_files_only=True)
+        except Exception:
+            tokenizer = AutoTokenizer.from_pretrained(path_to_load, trust_remote_code=True)
+            
         if tokenizer.pad_token is None:
             tokenizer.pad_token = tokenizer.eos_token
 
@@ -131,14 +135,25 @@ async def get_student_model_and_tokenizer(db: AsyncSession, force_base: bool = F
         use_8bit = torch.cuda.is_available()
         
         # Load model
-        model = AutoModelForCausalLM.from_pretrained(
-            path_to_load,
-            device_map=device_map,
-            load_in_8bit=use_8bit,
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            trust_remote_code=True,
-            llm_int8_enable_fp32_cpu_offload=True,  # Allow CPU offload if GPU OOM/dispatch warning
-        )
+        try:
+            model = AutoModelForCausalLM.from_pretrained(
+                path_to_load,
+                device_map=device_map,
+                load_in_8bit=use_8bit,
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+                trust_remote_code=True,
+                llm_int8_enable_fp32_cpu_offload=True,  # Allow CPU offload if GPU OOM/dispatch warning
+                local_files_only=True,
+            )
+        except Exception:
+            model = AutoModelForCausalLM.from_pretrained(
+                path_to_load,
+                device_map=device_map,
+                load_in_8bit=use_8bit,
+                torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+                trust_remote_code=True,
+                llm_int8_enable_fp32_cpu_offload=True,  # Allow CPU offload if GPU OOM/dispatch warning
+            )
 
         _model_cache[model_id_to_load] = (model, tokenizer, version_label, system_prompt)
         logger.info(f"Student model version '{version_label}' successfully loaded.")

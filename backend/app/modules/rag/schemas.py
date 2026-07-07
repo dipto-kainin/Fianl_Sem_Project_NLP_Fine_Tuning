@@ -44,6 +44,7 @@ class RAGQueryResponse(BaseModel):
     tokens_used: int = 0
     query: str
     use_rag: bool = True
+    used_rag: bool = True
 
 
 class RAGSearchRequest(BaseModel):
